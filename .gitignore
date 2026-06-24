@@ -5,6 +5,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .coverage
+coverage.xml
 htmlcov/
 
 # Packaging / build artifacts
@@ -18,9 +19,11 @@ venv/
 env/
 
 # Data & model artifacts (regenerated; never committed)
-data/
-models/
-mlruns/
+# Anchored to repo root (leading /) so they do NOT match the source package
+# src/retail_forecasting/data/.
+/data/
+/models/
+/mlruns/
 *.csv
 !dataset_schema_summary.csv
 
