@@ -35,6 +35,6 @@ train:
     n_jobs: -1
 
 mlflow:
-  tracking_uri: file:../mlruns
+  tracking_uri: file:./mlruns
   experiment_name: retail-demand-forecasting
   registered_model_name: retail-lgbm
