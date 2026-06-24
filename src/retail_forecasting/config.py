@@ -92,7 +92,7 @@ def load_config(path: str | os.PathLike[str] | None = None) -> Config:
     Raises:
         ConfigError: If the file is missing or any required section is absent.
     """
-    cfg_path = Path(path or os.environ.get(DEFAULT_CONFIG_ENV, DEFAULT_CONFIG_PATH))
+    cfg_path = Path(path or os.environ.get(DEFAULT_CONFIG_ENV) or DEFAULT_CONFIG_PATH)
     if not cfg_path.is_file():
         raise ConfigError(f"Config file not found: {cfg_path}")
 

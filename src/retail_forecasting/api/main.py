@@ -16,6 +16,7 @@ feature schema, which keeps the contract explicit and testable.
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,7 @@ from typing import Any
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ..exceptions import FeatureMismatchError, ModelNotFoundError
 from ..logging_config import configure_logging, get_logger
@@ -55,7 +56,7 @@ def _load_model(path: Path | None = None) -> None:
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Load the model on startup; degrade gracefully if it is absent."""
     configure_logging(os.environ.get("RF_LOG_LEVEL", "INFO"))
     try:
@@ -85,6 +86,10 @@ class PredictRequest(BaseModel):
 
 class PredictResponse(BaseModel):
     """Prediction output."""
+
+    # ``model_version`` would otherwise collide with pydantic's protected
+    # ``model_`` namespace and emit a UserWarning; opt out explicitly.
+    model_config = ConfigDict(protected_namespaces=())
 
     predictions: list[float]
     model_version: str = "0.1.0"

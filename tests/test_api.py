@@ -2,10 +2,26 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import joblib
 from fastapi.testclient import TestClient
 
 from retail_forecasting.api import main as api_main
+
+
+class _StubModel:
+    """Constant-output stand-in model used to exercise the ``/predict`` path.
+
+    Defined at module scope (not inside a test function) so that
+    ``joblib``/``pickle`` can serialize the instance to disk and the API's
+    startup loader can deserialize it again. Function-local classes are not
+    importable by qualified name and therefore cannot be pickled.
+    """
+
+    def predict(self, frame: Any) -> list[float]:
+        """Return a constant prediction (42.0) for each input row."""
+        return [42.0] * len(frame)
 
 
 def test_health_without_model(monkeypatch) -> None:
@@ -27,12 +43,8 @@ def test_predict_requires_model(monkeypatch) -> None:
 
 
 def test_predict_with_stub_model(tmp_path, monkeypatch) -> None:
-    class _Stub:
-        def predict(self, frame):
-            return [42.0] * len(frame)
-
     artifact = tmp_path / "m.joblib"
-    joblib.dump({"model": _Stub(), "features": ["a", "b"]}, artifact)
+    joblib.dump({"model": _StubModel(), "features": ["a", "b"]}, artifact)
     # Point the API at our stub artifact; lifespan loads it on startup.
     monkeypatch.setattr(api_main, "MODEL_PATH", artifact)
 

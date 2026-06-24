@@ -64,6 +64,36 @@ def _evaluate(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
     return {"mae": mae, "rmse": rmse, "mape": mape}
 
 
+def _baseline_metrics(
+    y_true: np.ndarray,
+    baseline_pred: np.ndarray,
+    model_metrics: dict[str, float],
+) -> dict[str, float]:
+    """Evaluate a seasonal-naive baseline and the model's relative improvement.
+
+    The baseline is the previous-day, same-hour value (``sales_lag_24h``). We
+    report the baseline's own error metrics plus the percentage reduction the
+    trained model achieves over it. This yields a *reproducible, defensible*
+    headline number instead of an inherited one, and contextualises absolute
+    metrics (e.g. MAPE is high on near-zero count data regardless of model).
+
+    Args:
+        y_true: Ground-truth target for the held-out test period.
+        baseline_pred: Seasonal-naive predictions for the same period.
+        model_metrics: The trained model's metrics from :func:`_evaluate`.
+
+    Returns:
+        ``baseline_mae/rmse/mape`` and ``mae_reduction_pct/rmse_reduction_pct``.
+    """
+    base = _evaluate(y_true, baseline_pred)
+    out: dict[str, float] = {f"baseline_{k}": v for k, v in base.items()}
+    for key in ("mae", "rmse"):
+        out[f"{key}_reduction_pct"] = (
+            float(100.0 * (base[key] - model_metrics[key]) / base[key]) if base[key] else 0.0
+        )
+    return out
+
+
 def train(cfg: Config) -> TrainResult:
     """Train LightGBM with a time-ordered split and log to MLflow.
 
@@ -98,6 +128,17 @@ def train(cfg: Config) -> TrainResult:
 
         preds = model.predict(x_test)
         metrics = _evaluate(y_test.to_numpy(), np.asarray(preds))
+
+        # Seasonal-naive baseline (previous-day, same-hour) for a reproducible
+        # improvement metric; skipped gracefully if the lag feature is absent.
+        if "sales_lag_24h" in x_test.columns:
+            metrics.update(
+                _baseline_metrics(
+                    y_test.to_numpy(),
+                    x_test["sales_lag_24h"].to_numpy(),
+                    metrics,
+                )
+            )
 
         mlflow.log_params(params)
         mlflow.log_metrics(metrics)

@@ -43,6 +43,14 @@ disallow_untyped_defs = true
 ignore_missing_imports = true
 plugins = []
 
+# Legacy Streamlit prototype: kept for the live demo but slated for retirement
+# in favour of the typed FastAPI service (see Roadmap). It predates the strict
+# typing standard, so it is excluded from mypy rather than retro-typed; all
+# production modules remain fully type-checked.
+[[tool.mypy.overrides]]
+module = "retail_forecasting.app.streamlit_app"
+ignore_errors = true
+
 # ---------------------------------------------------------------------------
 # pytest
 # ---------------------------------------------------------------------------

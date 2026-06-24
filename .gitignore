@@ -7,6 +7,11 @@ __pycache__/
 .coverage
 htmlcov/
 
+# Packaging / build artifacts
+*.egg-info/
+build/
+dist/
+
 # Virtual envs
 .venv/
 venv/

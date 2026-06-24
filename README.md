@@ -1,18 +1,20 @@
 # Real-Time Retail Demand Forecasting — Production MLOps Pipeline
 
-[![CI/CD](https://github.com/minhazur/retail-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/minhazur/retail-forecasting/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 Production-grade MLOps pipeline that forecasts hourly retail demand from
 **privacy-preserving synthetic data** using LightGBM. This repository takes an
-MSc dissertation (*"Real-Time Retail Demand Forecasting Using Synthetic Data"*,
-70%, 37% MAE reduction, 11.7% MAPE) and re-engineers it to the standards
-hiring teams expect: containerized, tested, type-checked, tracked with MLflow,
-served behind a real-time API, and shipped through CI/CD.
+MSc dissertation (*"Real-Time Retail Demand Forecasting Using Synthetic Data"*
+— graded 70%; the dissertation reported a 37% MAE reduction and 11.7% MAPE) and
+re-engineers it to the standards hiring teams expect: containerized, tested,
+type-checked, tracked with MLflow, served behind a real-time API, and shipped
+through CI/CD. Metrics in [Results](#results) are this pipeline's own measured,
+reproducible numbers — not inherited claims.
 
 > **Author:** Md Minhazur Rahman · MSc Data Science, University of Greenwich
-> · [Live prototype](https://retail-forecasting.streamlit.app)
+> · [Live prototype](https://retail-forecasting-hvdzvesi4u9l6fs5tvdoyi.streamlit.app/)
 
 ---
 
@@ -108,7 +110,7 @@ sequenceDiagram
 │   ├── data/generate.py       # Seeded, reproducible synthetic data generator
 │   ├── api/main.py            # FastAPI real-time inference service
 │   └── app/streamlit_app.py   # Legacy Streamlit prototype
-├── tests/                     # pytest: generator, features, API
+├── tests/                     # pytest: generator, features, API, train metrics
 ├── configs/config.yaml        # Central configuration
 ├── docker/entrypoint.sh       # Role switch: generate | train | serve | app
 ├── Dockerfile                 # Multi-stage, non-root, healthcheck
@@ -197,7 +199,7 @@ generator parameters, hyperparameters, and MLflow settings all live in config.
 | **ruff** | Linting + import ordering |
 | **black** | Deterministic formatting |
 | **mypy** | Static type checking (all functions are typed) |
-| **pytest** + coverage | Unit tests for generator, features, and API |
+| **pytest** + coverage | Unit tests for generator, features, API, and train metrics |
 | **pre-commit** | Runs the above on every commit |
 
 ```bash
@@ -206,7 +208,8 @@ ruff check src tests && black --check src tests && mypy src && pytest
 
 The test suite covers reproducibility (identical output per seed), schema
 validation, **leakage guards** (per-SKU lags never borrow across SKUs or look
-ahead), and the API's degraded (no-model) and happy paths.
+ahead), the metric/baseline logic behind the headline numbers, and the API's
+degraded (no-model) and happy paths.
 
 ---
 
@@ -225,13 +228,29 @@ On every push and pull request, `.github/workflows/ci.yml` runs three jobs:
 
 ## Results
 
-The forecasting model targets the dissertation's headline metrics — a **37%
-MAE reduction** over the linear baseline and **11.7% MAPE** — using LightGBM
-with per-SKU lag, rolling-mean, calendar, weather, and promotion features and a
-**time-ordered** train/test split (no look-ahead leakage). The reconciled
-pipeline reproduces the dissertation's exact engineered feature schema; running
-`train` regenerates the metrics and logs them to MLflow for comparison across
-runs.
+All figures below are produced by **this repository's own pipeline** — run
+`python -m retail_forecasting.train` (or `docker compose run --rm train`) to
+reproduce them; they are logged to MLflow on every run. LightGBM is trained on
+a **time-ordered 80/20 split** (101,760 train / 25,440 test hourly rows, 19
+features) with per-SKU lag, rolling-mean, calendar, weather, and promotion
+features and strict no-look-ahead leakage guards, then compared against a
+**seasonal-naive baseline** (previous-day, same-hour value):
+
+| Metric | LightGBM | Seasonal-naive baseline | Improvement |
+|--------|---------:|------------------------:|------------:|
+| MAE    | **0.530** | 0.895 | **−40.8%** |
+| RMSE   | **0.702** | 1.332 | **−47.3%** |
+| MAPE   | 41.0%    | 68.3% | — |
+
+**How to read these numbers.** The target (`sales_volume`) is a low, sparse
+hourly count (mean ≈ 0.87 units per SKU-hour), so percentage-error metrics like
+MAPE are inflated by near-zero denominators and make a poor headline on this
+data. The model's **40.8% MAE / 47.3% RMSE reduction over the naive baseline**
+is therefore the meaningful, scale-robust result. These are the pipeline's own
+measured values; the source dissertation separately reported a 37% MAE
+reduction and 11.7% MAPE on its setup, and this re-engineered pipeline lands in
+the same regime for *relative* improvement while measuring everything
+reproducibly and logging it to the MLflow registry (`retail-lgbm`).
 
 ---
 
