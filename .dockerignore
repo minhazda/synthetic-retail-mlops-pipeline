@@ -1,0 +1,31 @@
+# Keep the build context tiny: no data, no artifacts, no caches.
+.git/
+.github/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.venv/
+venv/
+env/
+
+# Large data & model artifacts are mounted at runtime, never baked in.
+data/
+models/
+mlruns/
+*.csv
+*.png
+
+# Docs / dev-only
+*.md
+!README.md
+.env
+*.env
+tests/
+.vscode/
+.idea/
+.DS_Store

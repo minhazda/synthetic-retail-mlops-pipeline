@@ -1,0 +1,23 @@
+column,dtype,missing_%
+timestamp,object,0.0
+product_id,object,0.0
+sales_volume,int64,0.0
+stock_level,int64,0.0
+promo_flag,int64,0.0
+holiday_flag,int64,0.0
+foot_traffic,int64,0.0
+hour,int64,0.0
+day_of_week,int64,0.0
+sales_lag_1h,float64,0.0
+sales_lag_24h,float64,0.0
+sales_lag_7d,float64,0.0
+sales_roll_3h,float64,0.0
+stock_lag_1h,float64,0.0
+weather_cold,int64,0.0
+weather_rainy,int64,0.0
+weather_snowy,int64,0.0
+weather_sunny,int64,0.0
+category_cleaning,int64,0.0
+category_dairy,int64,0.0
+category_fresh produce,int64,0.0
+category_snacks,int64,0.0

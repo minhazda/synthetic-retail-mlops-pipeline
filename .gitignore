@@ -1,0 +1,34 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Data & model artifacts (regenerated; never committed)
+data/
+models/
+mlruns/
+*.csv
+!dataset_schema_summary.csv
+
+# Notebooks / plots
+*.ipynb_checkpoints/
+*.png
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# Secrets
+.env
+*.env

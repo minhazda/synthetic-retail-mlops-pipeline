@@ -1,0 +1,86 @@
+# ===========================================================================
+# Local development stack.
+#
+#   docker compose run --rm train     # generate data + train model
+#   docker compose up api             # serve the FastAPI inference API
+#   docker compose up dashboard       # serve the Streamlit prototype
+#   docker compose up mlflow          # experiment tracking UI
+#
+# Shared named volumes keep data / models / mlruns in sync across services.
+# ===========================================================================
+
+x-build: &default-build
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: retail-forecasting:local
+
+x-env: &default-env
+  RF_CONFIG: /app/configs/config.yaml
+  RF_MODEL_PATH: /app/models/lgbm_model.joblib
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+
+services:
+  # ---- One-shot: generate synthetic data + train + log to MLflow ----------
+  train:
+    <<: *default-build
+    environment:
+      <<: *default-env
+    command: ["train"]
+    volumes:
+      - data:/app/data
+      - models:/app/models
+      - mlruns:/app/mlruns
+    depends_on:
+      mlflow:
+        condition: service_started
+
+  # ---- Real-time inference API (replaces Streamlit per the roadmap) --------
+  api:
+    <<: *default-build
+    environment:
+      <<: *default-env
+    command: ["serve"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ---- Streamlit dashboard (legacy prototype, still useful for demos) ------
+  dashboard:
+    <<: *default-build
+    environment:
+      <<: *default-env
+    command: ["app"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - data:/app/data
+      - models:/app/models:ro
+    restart: unless-stopped
+
+  # ---- MLflow tracking server + model registry ----------------------------
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.15.1
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_store:/mlflow
+
+volumes:
+  data:
+  models:
+  mlruns:
+  mlflow_store:
