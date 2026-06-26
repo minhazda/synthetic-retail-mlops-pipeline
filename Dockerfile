@@ -78,6 +78,11 @@ RUN chmod +x ./docker/entrypoint.sh
 
 USER appuser
 
+# Train once at image-build time so the artifact is baked into the layer.
+# Cold-start is then just uvicorn + joblib.load (~seconds, not minutes).
+# To retrain locally: docker run --rm retail-forecasting train
+RUN python -m retail_forecasting.train
+
 EXPOSE 8000 8501
 
 # Liveness probe for the inference API (overridden/ignored for batch roles).
