@@ -1,0 +1,64 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "Dockerfile"
+      - "requirements*.txt"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# Keyless auth: GitHub mints an OIDC token, GCP trades it for short-lived creds.
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: us-central1
+  REPOSITORY: retail-forecasting
+  SERVICE: retail-forecasting-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Requires repo variables (Settings -> Secrets and variables -> Actions ->
+    # Variables): GCP_PROJECT_ID, GCP_WIF_PROVIDER, GCP_DEPLOY_SA.
+    # These are non-secret identifiers produced by `terraform output`.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (keyless / WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        run: |
+          IMAGE="$REGION-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/$REPOSITORY/api:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --port 8000 \
+            --allow-unauthenticated \
+            --min-instances 0 \
+            --max-instances 2 \
+            --memory 512Mi \
+            --cpu 1
+
+      - name: Show service URL
+        run: gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)'
