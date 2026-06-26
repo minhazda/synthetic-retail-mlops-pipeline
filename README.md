@@ -14,7 +14,7 @@ pinned: false
 
 **Base URL:** `https://minhazda-retail-forecasting-api.hf.space`
 
-> ⚠️ Free-tier cold start — first request after inactivity may take ~30–60s.
+> ⚠️ Free-tier cold start — container may sleep after inactivity; first request takes ~10–20s to wake (no retraining — model is baked into the image).
 
 ```bash
 # Health check
