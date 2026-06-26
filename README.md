@@ -1,5 +1,34 @@
 # Real-Time Retail Demand Forecasting — Production MLOps Pipeline
 
+## 🔴 Live API
+
+**Base URL:** `https://minhazda-retail-forecasting-api.hf.space`
+
+> ⚠️ Free-tier cold start — first request after inactivity may take ~30–60s.
+
+```bash
+# Health check
+curl https://minhazda-retail-forecasting-api.hf.space/health
+
+# Get feature schema
+curl https://minhazda-retail-forecasting-api.hf.space/metadata
+
+# Predict demand (Wednesday noon, sunny, Fresh Produce SKU, no promotion)
+curl -X POST https://minhazda-retail-forecasting-api.hf.space/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rows": [{
+      "stock_level": 190, "promo_flag": 0, "holiday_flag": 0, "foot_traffic": 52,
+      "hour": 12, "day_of_week": 2,
+      "sales_lag_1h": 1, "sales_lag_24h": 2, "sales_lag_7d": 1, "sales_roll_3h": 1.3,
+      "stock_lag_1h": 191,
+      "weather_Cold": 0, "weather_Rainy": 0, "weather_Snowy": 0, "weather_Sunny": 1,
+      "category_Cleaning": 0, "category_Dairy": 0, "category_Fresh Produce": 1, "category_Snacks": 0
+    }]
+  }'
+# → {"predictions":[5.904732600617614],"model_version":"0.1.0"}
+```
+
 [![CI/CD](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/minhazda/synthetic-retail-mlops-pipeline/branch/main/graph/badge.svg)](https://codecov.io/gh/minhazda/synthetic-retail-mlops-pipeline)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
