@@ -1,3 +1,13 @@
+---
+title: Retail Forecasting API
+emoji: 📈
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # Real-Time Retail Demand Forecasting — Production MLOps Pipeline
 
 [![CI/CD](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml)

@@ -26,6 +26,11 @@ case "$CMD" in
     exec uvicorn retail_forecasting.api.main:app \
       --host "${API_HOST:-0.0.0.0}" --port "${API_PORT:-8000}" "$@"
     ;;
+  train-and-serve)
+    python -m retail_forecasting.train
+    exec uvicorn retail_forecasting.api.main:app \
+      --host "${API_HOST:-0.0.0.0}" --port "${API_PORT:-8000}"
+    ;;
   app)
     exec streamlit run src/retail_forecasting/app/streamlit_app.py \
       --server.port "${STREAMLIT_PORT:-8501}" --server.address 0.0.0.0 "$@"
