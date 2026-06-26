@@ -6,7 +6,8 @@ Run **scales to zero**, so the service costs ~$0 when idle and stays within the
 always-free tier for portfolio-level traffic.
 
 No service-account keys are created or stored: CI authenticates to GCP with
-**Workload Identity Federation** (short-lived OIDC tokens).
+**Workload Identity Federation** (short-lived OIDC tokens). The first image is
+built in the cloud with **Cloud Build**, so **no local Docker is required**.
 
 ## What gets created
 
@@ -22,8 +23,13 @@ No service-account keys are created or stored: CI authenticates to GCP with
 
 - A GCP project with **billing enabled** (free tier is sufficient).
 - [`gcloud`](https://cloud.google.com/sdk/docs/install) and
-  [`terraform`](https://developer.hashicorp.com/terraform/install) installed locally.
-- `gcloud auth application-default login` completed.
+  [`terraform`](https://developer.hashicorp.com/terraform/install) installed.
+- Authenticate once:
+  ```bash
+  gcloud auth login                      # user login (opens a browser)
+  gcloud auth application-default login  # credentials Terraform/ADC will use
+  gcloud config set project YOUR_PROJECT_ID
+  ```
 
 ## One-time setup
 
@@ -34,31 +40,37 @@ cp terraform.tfvars.example terraform.tfvars
 terraform init
 ```
 
-### Step 1 — Bootstrap the registry, then push a first image
+### Step 1 — Bootstrap the registry, then build the first image (no local Docker)
 
 Cloud Run needs an image to exist before the service can be created, so we create
-the registry first, push one image, then apply the rest.
+the registry first, build one image with Cloud Build, then apply the rest.
 
 ```bash
-# Create just the registry + enabled APIs
+# Create just the enabled APIs + registry
 terraform apply \
   -target=google_project_service.enabled \
   -target=google_artifact_registry_repository.repo
 
-# Build and push the first image
+# Build the first image in the cloud and push it to Artifact Registry.
 PROJECT_ID=$(grep project_id terraform.tfvars | cut -d'"' -f2)
-gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-IMAGE="us-central1-docker.pkg.dev/$PROJECT_ID/retail-forecasting/api:bootstrap"
-docker build -t "$IMAGE" ..
-docker push "$IMAGE"
-# set this exact value as `image` in terraform.tfvars
+gcloud builds submit .. \
+  --tag "us-central1-docker.pkg.dev/$PROJECT_ID/retail-forecasting/api:bootstrap"
+# then set that exact ref as `image` in terraform.tfvars
 ```
+
+> Prefer local Docker instead of Cloud Build? `docker build -t <IMAGE> .. && docker push <IMAGE>` also works.
 
 ### Step 2 — Apply the full stack
 
 ```bash
 terraform apply
 terraform output service_url   # your live API URL
+```
+
+Smoke-test it:
+
+```bash
+curl "$(terraform output -raw service_url)/health"
 ```
 
 ## Wire up continuous deployment
