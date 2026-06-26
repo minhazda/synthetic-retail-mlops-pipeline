@@ -1,0 +1,6 @@
+# Normalize line endings. Shell scripts and the Dockerfile MUST stay LF so the
+# container entrypoint runs regardless of the OS that checked out the repo —
+# a Windows (CRLF) checkout would otherwise break the script shebang at runtime.
+* text=auto eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
