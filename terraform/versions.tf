@@ -8,10 +8,10 @@ terraform {
     }
   }
 
-  # Optional: store state in a GCS bucket instead of locally. Create the bucket
-  # first, then uncomment and run `terraform init -migrate-state`.
-  # backend "gcs" {
-  #   bucket = "your-tf-state-bucket"
-  #   prefix = "retail-forecasting"
-  # }
+  # Remote state in GCS (versioned bucket) so the deployment can be managed
+  # from any clone and survives loss of the local working directory.
+  backend "gcs" {
+    bucket = "avian-silicon-500616-s8-tfstate"
+    prefix = "retail-forecasting"
+  }
 }
