@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+github_repo = "minhazda/synthetic-retail-mlops-pipeline"
+
+# Set during bootstrap (see docs/DEPLOYMENT.md). Example:
+# image = "us-central1-docker.pkg.dev/your-gcp-project-id/retail-forecasting/api:bootstrap"
+image = "us-central1-docker.pkg.dev/your-gcp-project-id/retail-forecasting/api:bootstrap"
