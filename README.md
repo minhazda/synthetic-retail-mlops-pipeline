@@ -45,6 +45,7 @@ reproducible numbers — not inherited claims.
 
 > **Author:** Md Minhazur Rahman · MSc Data Science, University of Greenwich
 > · [Live prototype](https://retail-forecasting-hvdzvesi4u9l6fs5tvdoyi.streamlit.app/)
+> · [Portfolio case study](docs/CASE_STUDY.md)
 
 ---
 
