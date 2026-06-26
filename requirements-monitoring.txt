@@ -1,0 +1,10 @@
+# Monitoring-only dependencies. NOT installed in the serving image (keeps it
+# slim); used by retail_forecasting.monitoring.drift to generate Evidently
+# data-drift reports offline.
+#
+#   pip install -r requirements-monitoring.txt
+#   python -m retail_forecasting.monitoring.drift   # writes reports/drift_report.html
+#
+# Evidently's 0.4.x line exposes the Report / metric_preset API used here.
+evidently>=0.4.30,<0.5
+pandas==2.2.2
