@@ -142,11 +142,13 @@ sequenceDiagram
 │   ├── api/main.py            # FastAPI real-time inference service
 │   └── app/streamlit_app.py   # Legacy Streamlit prototype
 ├── tests/                     # pytest: generator, features, API, train metrics
+├── terraform/                 # IaC: GCP Cloud Run, Artifact Registry, WIF
 ├── configs/config.yaml        # Central configuration
 ├── docker/entrypoint.sh       # Role switch: generate | train | serve | app
 ├── Dockerfile                 # Multi-stage, non-root, healthcheck
 ├── docker-compose.yml         # Local stack: train · api · dashboard · mlflow
-├── .github/workflows/ci.yml   # CI/CD: lint → type → test → build → smoke
+├── .github/workflows/ci.yml   # CI: lint → type → test → build → smoke
+├── .github/workflows/deploy.yml  # CD: build → push → deploy to Cloud Run (keyless)
 ├── pyproject.toml             # ruff · black · mypy · pytest config + packaging
 ├── requirements.txt           # Pinned runtime deps
 └── requirements-dev.txt       # Pinned dev/CI deps
@@ -258,6 +260,25 @@ On every push and pull request, `.github/workflows/ci.yml` runs three jobs:
 
 ---
 
+## Cloud deployment (GCP Cloud Run)
+
+Infrastructure-as-code for a serverless deployment lives in
+[`terraform/`](terraform/), with keyless continuous deployment in
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
+
+- **Cloud Run** service that **scales to zero** (≈$0 idle, free-tier friendly),
+  with `/health` startup + liveness probes and a public invoker binding.
+- **Artifact Registry** for images; **Terraform** provisions the registry, the
+  service, and all IAM.
+- **Workload Identity Federation** — GitHub Actions authenticates to GCP with
+  short-lived OIDC tokens; **no service-account keys** are ever created or stored.
+- On every push to `main`, CI builds, pushes, and deploys a new revision;
+  Terraform ignores image drift so it never reverts a deployment.
+
+Go live in a few commands — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+---
+
 ## Results
 
 All figures below are produced by **this repository's own pipeline** — run
@@ -288,14 +309,16 @@ reproducibly and logging it to the MLflow registry (`retail-lgbm`).
 
 ## Roadmap
 
-This is deliverable **1–4** (Dockerization, MLflow, CI/CD, docs) of a four-week
-production build. Next:
+Deliverables **1–5** (Dockerization, MLflow, CI/CD, docs, **cloud IaC**) are
+done. Next:
 
+- Data-drift monitoring + alerting (Evidently / Prometheus + Grafana).
 - Feature store (Feast or custom) for the synthetic features.
 - Promote the FastAPI service from scaffold to the primary serving surface,
   retiring the Streamlit prototype.
-- Data-drift monitoring + alerting (Evidently / Prometheus + Grafana).
-- Infrastructure-as-Code (Terraform) for cloud deployment.
+
+✅ **Infrastructure-as-Code (Terraform) + cloud deployment to GCP Cloud Run** —
+see [Cloud deployment](#cloud-deployment-gcp-cloud-run) and `docs/DEPLOYMENT.md`.
 
 ---
 
