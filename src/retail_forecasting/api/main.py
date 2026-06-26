@@ -24,6 +24,7 @@ from typing import Any
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..exceptions import FeatureMismatchError, ModelNotFoundError
@@ -93,6 +94,11 @@ class PredictResponse(BaseModel):
 
     predictions: list[float]
     model_version: str = "0.1.0"
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health")
