@@ -1,6 +1,7 @@
 # Real-Time Retail Demand Forecasting — Production MLOps Pipeline
 
 [![CI/CD](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/minhazda/synthetic-retail-mlops-pipeline/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/minhazda/synthetic-retail-mlops-pipeline/branch/main/graph/badge.svg)](https://codecov.io/gh/minhazda/synthetic-retail-mlops-pipeline)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
