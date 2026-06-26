@@ -2,19 +2,20 @@
 
 ## 🔴 Live API
 
-**Base URL:** `https://minhazda-retail-forecasting-api.hf.space`
+**Hugging Face Space:** `https://minhazda-retail-forecasting-api.hf.space`
+**GCP Cloud Run (Terraform-deployed):** `https://retail-forecasting-api-ude5vos6lq-uc.a.run.app`
 
-> ⚠️ Free-tier cold start — container may sleep after inactivity; first request takes ~10–20s to wake (no retraining — model is baked into the image).
+> ⚠️ Free-tier cold start — containers sleep after inactivity; the first request takes ~10–20s to wake (no retraining — model is baked into the image).
 
 ```bash
-# Health check
-curl https://minhazda-retail-forecasting-api.hf.space/health
+# Health check (Cloud Run)
+curl https://retail-forecasting-api-ude5vos6lq-uc.a.run.app/health
 
 # Get feature schema
-curl https://minhazda-retail-forecasting-api.hf.space/metadata
+curl https://retail-forecasting-api-ude5vos6lq-uc.a.run.app/metadata
 
 # Predict demand (Wednesday noon, sunny, Fresh Produce SKU, no promotion)
-curl -X POST https://minhazda-retail-forecasting-api.hf.space/predict \
+curl -X POST https://retail-forecasting-api-ude5vos6lq-uc.a.run.app/predict \
   -H "Content-Type: application/json" \
   -d '{
     "rows": [{
@@ -262,7 +263,8 @@ On every push and pull request, `.github/workflows/ci.yml` runs three jobs:
 
 ## Cloud deployment (GCP Cloud Run)
 
-Infrastructure-as-code for a serverless deployment lives in
+**▶ Live:** https://retail-forecasting-api-ude5vos6lq-uc.a.run.app/health —
+deployed to Cloud Run entirely from the infrastructure-as-code in
 [`terraform/`](terraform/), with keyless continuous deployment in
 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
 
@@ -275,7 +277,7 @@ Infrastructure-as-code for a serverless deployment lives in
 - On every push to `main`, CI builds, pushes, and deploys a new revision;
   Terraform ignores image drift so it never reverts a deployment.
 
-Go live in a few commands — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+Reproduce the whole deployment in a few commands — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 
