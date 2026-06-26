@@ -209,8 +209,9 @@ docker run --rm -p 8000:8000 -v "$PWD/models:/app/models:ro" retail-forecasting 
 
 The build is **multi-stage** (wheels compiled in a builder, copied into a slim
 runtime), runs as a **non-root** user, and ships a `HEALTHCHECK` against
-`/health`. Datasets and model artifacts are mounted at runtime — never baked
-into the image (`.dockerignore` keeps the build context small).
+`/health`. The model artifact is baked into the image at build time so the serving
+container starts without retraining. Datasets and MLflow state are excluded
+via `.dockerignore` to keep the build context small.
 
 ---
 
