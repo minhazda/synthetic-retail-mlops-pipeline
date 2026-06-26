@@ -7,6 +7,7 @@ locals {
   required_services = [
     "run.googleapis.com",
     "artifactregistry.googleapis.com",
+    "cloudbuild.googleapis.com", # lets `gcloud builds submit` build images without local Docker
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
     "sts.googleapis.com",
