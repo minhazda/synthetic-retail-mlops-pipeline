@@ -74,7 +74,9 @@ COPY --chown=appuser:appuser configs/ ./configs/
 COPY --chown=appuser:appuser docker/entrypoint.sh ./docker/entrypoint.sh
 COPY --chown=appuser:appuser pyproject.toml README.md ./
 
-RUN chmod +x ./docker/entrypoint.sh
+# Strip any CR so a Windows (CRLF) checkout still yields a working LF script,
+# then make the entrypoint executable.
+RUN sed -i 's/\r$//' ./docker/entrypoint.sh && chmod +x ./docker/entrypoint.sh
 
 USER appuser
 
