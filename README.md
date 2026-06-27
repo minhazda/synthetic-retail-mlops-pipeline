@@ -85,7 +85,7 @@ flowchart LR
     end
 
     subgraph Serving["Serving plane"]
-        API["FastAPI Inference API<br/>/health /predict /metadata"]
+        API["FastAPI Inference API<br/>/health /predict /metadata /metrics"]
         APP["Streamlit Dashboard<br/>(legacy demo)"]
         REG --> API
         REG --> APP
@@ -140,10 +140,11 @@ sequenceDiagram
 │   ├── features.py            # Single shared feature pipeline (train == serve)
 │   ├── train.py               # LightGBM training + MLflow + artifact persistence
 │   ├── data/generate.py       # Seeded, reproducible synthetic data generator
-│   ├── api/main.py            # FastAPI real-time inference service
+│   ├── api/main.py            # FastAPI real-time inference service (+ /metrics)
 │   └── app/streamlit_app.py   # Legacy Streamlit prototype
 ├── tests/                     # pytest: generator, features, API, train metrics
 ├── terraform/                 # IaC: GCP Cloud Run, Artifact Registry, WIF
+├── monitoring/                # Prometheus + Grafana stack; Evidently drift report
 ├── configs/config.yaml        # Central configuration
 ├── docker/entrypoint.sh       # Role switch: generate | train | serve | app
 ├── Dockerfile                 # Multi-stage, non-root, healthcheck
@@ -281,6 +282,21 @@ Reproduce the whole deployment in a few commands — see [`docs/DEPLOYMENT.md`](
 
 ---
 
+## Observability
+
+The API exposes Prometheus metrics at **`/metrics`** (HTTP latency/throughput
+plus custom `rf_predictions_total` and an `rf_prediction_value` histogram for
+model-side drift watching). A local **Prometheus + Grafana** stack with a
+pre-provisioned dashboard, and an **Evidently** offline data-drift report, live
+in [`monitoring/`](monitoring/):
+
+```bash
+docker compose up api                                          # API + /metrics
+docker compose -f monitoring/docker-compose.monitoring.yml up  # Prometheus :9090 + Grafana :3000
+```
+
+---
+
 ## Results
 
 All figures below are produced by **this repository's own pipeline** — run
@@ -311,16 +327,17 @@ reproducibly and logging it to the MLflow registry (`retail-lgbm`).
 
 ## Roadmap
 
-Deliverables **1–5** (Dockerization, MLflow, CI/CD, docs, **cloud IaC**) are
-done. Next:
+Deliverables **1–6** (Dockerization, MLflow, CI/CD, docs, cloud IaC,
+observability) are done:
 
-- Data-drift monitoring + alerting (Evidently / Prometheus + Grafana).
+✅ **Infrastructure-as-Code (Terraform) + GCP Cloud Run** — see [Cloud deployment](#cloud-deployment-gcp-cloud-run).
+✅ **Observability** — Prometheus `/metrics`, Grafana dashboard, Evidently drift report — see [Observability](#observability).
+
+Next:
+
 - Feature store (Feast or custom) for the synthetic features.
 - Promote the FastAPI service from scaffold to the primary serving surface,
   retiring the Streamlit prototype.
-
-✅ **Infrastructure-as-Code (Terraform) + cloud deployment to GCP Cloud Run** —
-see [Cloud deployment](#cloud-deployment-gcp-cloud-run) and `docs/DEPLOYMENT.md`.
 
 ---
 
